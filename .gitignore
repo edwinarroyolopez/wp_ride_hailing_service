@@ -1,0 +1,5 @@
+*.lock
+
+# Ignore test files.
+coverage/*
+coverage
