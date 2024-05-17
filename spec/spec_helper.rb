@@ -6,6 +6,7 @@ ENV['RACK_ENV'] = 'test'
 
 require 'rack/test'
 require 'rspec'
+require 'webmock/rspec'
 require_relative '../app/api'
 
 module RSpecMixin
@@ -13,4 +14,7 @@ module RSpecMixin
   def app() TransporteAPI end
 end
 
-RSpec.configure { |c| c.include RSpecMixin }
+RSpec.configure do |config|
+  config.include RSpecMixin
+  WebMock.disable_net_connect!(allow_localhost: true)
+end
