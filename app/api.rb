@@ -99,21 +99,13 @@ class TransporteAPI < Grape::API
         requires :user_type, type: String, desc: 'User type (driver o rider)'
       end
       post do
-        logger.info("create_payment_method -> headers['Authorization'] #{headers['Authorization']}")
-        logger.info("create_payment_method -> params[:Authorization] #{params[:Authorization]}")
-
         jwtToken = headers['Authorization'] ? headers['Authorization'] : params[:Authorization]
-
-        logger.info("create_payment_method -> jwtToken #{jwtToken}")
-
         authenticate!(jwtToken)
         userLogged = decode_token(jwtToken)
 
         url = "#{base_api_url}/tokens/cards"
         logger.info("create_payment_method -> Este es un mensaje de información #{url}")
-        logger.info("create_payment_method -> jwtToken #{jwtToken}")
-        logger.info("create_payment_method -> userLogged #{userLogged}")
-
+        
           # Construir el cuerpo de la solicitud a la API externa
           headers = {
             'Content-Type' => 'application/json',
