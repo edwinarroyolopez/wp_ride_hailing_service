@@ -22,7 +22,7 @@
 │   ├── api_spec.rb
 │   └── ride_spec.rb
 │
-├── Config.ru
+├── config.ru
 ├── Gemfile
 ├── Gemfile.lock
 ├── Rakefile
@@ -57,6 +57,8 @@ https://coveralls.io/github/edwinarroyolopez/wp_ride_hailing_service?branch=mast
 
 TODO:
     🔲 Create payment method
+    🔲 Create postman collection
+    🔲 Create documentation 
     🔲 Generate transaction with payment method with external api
     🔲 Keep unit tests
 
