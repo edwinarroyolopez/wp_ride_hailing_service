@@ -1,6 +1,6 @@
 # spec/ride_spec.rb
 require 'spec_helper'
-require_relative '../app/models'
+require_relative '../app/models/Ride'
 
 RSpec.describe Ride do
   describe '.calculate_cost' do
