@@ -6,7 +6,8 @@ gem 'dry-validation'
 gem 'rack-test'
 gem 'httparty'
 gem 'simplecov', require: false, group: :test
-
+gem 'bcrypt'
+gem 'jwt'
 
 group :test do
     gem 'rspec'
