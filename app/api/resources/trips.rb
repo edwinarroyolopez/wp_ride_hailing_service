@@ -1,5 +1,7 @@
 require 'logger'
+require 'dry-validation'
 require_relative '../../models/ride'
+require_relative '../../validators/ride_schema'
 
 module Resources
   class Trips < Grape::API
@@ -25,20 +27,21 @@ module Resources
     end
 
     resource :request_ride do
-      desc 'Request a ride'
+      desc 'Request a new ride'
       params do
-        requires :latitude, type: Float, desc: 'Latitude of the pickup location'
-        requires :longitude, type: Float, desc: 'Longitude of the pickup location'
+        requires :latitude, type: Float, desc: 'Current latitude of the rider'
+        requires :longitude, type: Float, desc: 'Current longitude of the rider'
       end
       post do
         jwtToken = headers['Authorization'] ? headers['Authorization'] : params[:Authorization]
         authenticate!(jwtToken)
         user = current_user(jwtToken)
         
-        logger.info("user  #{user}")
+        error!('Not allowed', 403) unless user[:user_type] == 'rider'
+        validation = Validators::RideRequestSchema.call(params)
 
-        if user[:user_type] == 'rider'
-            # Seleccionar un conductor aleatorio
+
+        if validation.success?
             drivers = USERS.select { |u| u[:user_type] == 'driver' }
             assigned_driver = drivers.sample
       
@@ -54,7 +57,7 @@ module Resources
           
           { message: 'Ride requested successfully', status: 'requested' }
         else
-          error!('Not allowed', 403)
+          error!(validation.errors.to_h, 400)
         end
       end
     end
@@ -70,11 +73,15 @@ module Resources
         jwtToken = headers['Authorization'] ? headers['Authorization'] : params[:Authorization]
         authenticate!(jwtToken)
         user = current_user(jwtToken)
-        if user[:user_type] == 'driver'
+
+        error!('Not allowed', 403) unless user[:user_type] == 'driver'
+        validation = Validators::RideFinishSchema.call(params)
+
+        if validation.success?
           # Aquí iría la lógica para finalizar un viaje
           { message: 'Ride finished successfully', status: 'finished' }
         else
-          error!('Not allowed', 403)
+          error!(validation.errors.to_h, 400)
         end
       end
     end
