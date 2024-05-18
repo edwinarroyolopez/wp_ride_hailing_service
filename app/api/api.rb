@@ -1,5 +1,6 @@
 require 'grape'
 require 'logger'
+require 'securerandom'
 require_relative '../../config/env'
 require_relative 'helpers/authentication_helper'
 require_relative 'resources/users'

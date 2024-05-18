@@ -30,6 +30,34 @@ module AuthenticationHelper
     error!('Unauthorized', 401) unless decoded_token
   end
 
+  def haversine(lat1, lon1, lat2, lon2)
+    # Convertir grados a radianes
+    rad_per_deg = Math::PI / 180
+    rkm = 6371 # Radio de la Tierra en kilómetros
+  
+    # Convertir las coordenadas de grados a radianes
+    lat1_rad = lat1 * rad_per_deg
+    lon1_rad = lon1 * rad_per_deg
+    lat2_rad = lat2 * rad_per_deg
+    lon2_rad = lon2 * rad_per_deg
+  
+    # Diferencias de latitud y longitud
+    dlat = lat2_rad - lat1_rad
+    dlon = lon2_rad - lon1_rad
+  
+    # Fórmula de Haversine
+    a = Math.sin(dlat / 2)**2 + Math.cos(lat1_rad) * Math.cos(lat2_rad) * Math.sin(dlon / 2)**2
+    c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  
+    # Distancia en kilómetros
+    rkm * c
+    # Ejemplo de uso
+    # lat1 = 40.7128 # Latitud de Nueva York
+    # lon1 = -74.0060 # Longitud de Nueva York
+    # lat2 = 34.0522 # Latitud de Los Ángeles
+    # lon2 = -118.2437 # Longitud de Los Ángeles
+  end
+
   def current_user(token)
     decoded_token = decode_token(token)
     user = USERS.find { |u| u[:user_id] == decoded_token['user_id'] }

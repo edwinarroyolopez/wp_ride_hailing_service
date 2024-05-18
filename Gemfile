@@ -8,6 +8,7 @@ gem 'httparty'
 gem 'simplecov', require: false, group: :test
 gem 'bcrypt'
 gem 'jwt'
+gem 'securerandom'
 
 group :test do
     gem 'rspec'
