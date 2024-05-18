@@ -35,7 +35,11 @@ To install run this command ```bundle install```
 
 ## Start 
 
-To run run this command ```rackup -p 3000```
+To run  this command ```rackup -p 3000```
+
+# Migrations
+To run migrations this command ```sequel -m db/migrations postgres://DB_USER:DB_PASSWORD@DB_HOST/DB_NAME```
+
 
 ## Test 
 

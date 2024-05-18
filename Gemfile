@@ -9,6 +9,9 @@ gem 'simplecov', require: false, group: :test
 gem 'bcrypt'
 gem 'jwt'
 gem 'securerandom'
+gem 'sequel'
+gem 'pg'
+gem 'dotenv'
 
 group :test do
     gem 'rspec'
