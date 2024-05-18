@@ -30,8 +30,9 @@ module Resources
         requires :longitude, type: Float, desc: 'Longitude of the pickup location'
       end
       post do
-        authenticate!(headers['Authorization'])
-        user = current_user(headers['Authorization'])
+        jwtToken = headers['Authorization'] ? headers['Authorization'] : params[:Authorization]
+        authenticate!(jwtToken)
+        user = current_user(jwtToken)
         
         logger.info("user  #{user}")
 

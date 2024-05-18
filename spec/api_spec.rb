@@ -5,8 +5,7 @@ describe TransporteAPI do
   logger = Logger.new(STDOUT)
 
   SECRET_KEY = ENV['SECRET_KEY'] 
-  valid_token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxfQ._MFcwOBH0vvfzfn2PqelBh3llZ8IXvQQZYgOlo7RuJA'
-  invalid_token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxfQ._assd'
+
 
   def encode_token(payload)
     JWT.encode(payload, SECRET_KEY, 'HS256')
@@ -107,8 +106,8 @@ describe TransporteAPI do
     end
 
     context 'cuando se proporcionan parámetros válidos y un token válido' do
-      let(:params) { { userId: '1', user_type: 'driver', 'Authorization' => "Bearer #{valid_token}" } }
-
+      let(:valid_rider_token) { encode_token({ user_id: 1 }) }
+      let(:params) { { userId: '1', user_type: 'driver', 'Authorization' => "Bearer #{valid_rider_token}" } }
       it 'crea una nueva fuente de pago' do
         post '/create_payment_source', params
         expect(last_response.status).to eq(201)
@@ -136,21 +135,21 @@ describe TransporteAPI do
   describe 'POST /request_ride' do
     context 'cuando el token pertenece a un rider' do
       let(:valid_rider_token) { encode_token({ user_id: 1 }) }
-  
       it 'permite la solicitud de un viaje' do
         header 'Authorization', "Bearer #{valid_rider_token}"
-        post '/request_ride', latitude: 123.456, longitude: -78.910
-        expect(last_response.status).to eq(200)
+        post '/request_ride',  { latitude: 123.456, longitude: -78.910, 'Authorization' => "Bearer #{valid_rider_token}"}
+        expect(last_response.status).to eq(201)
         expect(JSON.parse(last_response.body)).to eq({ 'message' => 'Ride requested successfully' })
       end
     end
   
     context 'cuando el token pertenece a un conductor' do
       let(:valid_driver_token) { encode_token({ user_id: 4 }) }
-  
+      
+
       it 'no permite la solicitud de un viaje y devuelve un error de "no permitido"' do
         header 'Authorization', "Bearer #{valid_driver_token}"
-        post '/request_ride', latitude: 123.456, longitude: -78.910
+        post '/request_ride', { latitude: 123.456, longitude: -78.910, 'Authorization' => "Bearer #{valid_driver_token}"}
         expect(last_response.status).to eq(403)
         expect(JSON.parse(last_response.body)).to eq({ 'error' => 'Not allowed' })
       end
@@ -158,7 +157,6 @@ describe TransporteAPI do
   
     context 'cuando el token no es válido' do
       let(:invalid_token) { 'invalid_token' }
-  
       it 'devuelve un error de autenticación' do
         header 'Authorization', "Bearer #{invalid_token}"
         post '/request_ride', latitude: 123.456, longitude: -78.910
