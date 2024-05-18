@@ -1,6 +1,8 @@
+require 'sequel'
+
 class Ride < Sequel::Model
-  many_to_one :rider, class: :User, key: :rider_id
-  many_to_one :driver, class: :User, key: :driver_id
+  plugin :timestamps, update_on_create: true
+  plugin :validation_helpers
 
   def validate
     super

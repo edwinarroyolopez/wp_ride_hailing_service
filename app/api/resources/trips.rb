@@ -1,4 +1,5 @@
 require 'logger'
+require_relative '../../models/ride'
 
 module Resources
   class Trips < Grape::API
@@ -41,16 +42,24 @@ module Resources
             drivers = USERS.select { |u| u[:user_type] == 'driver' }
             assigned_driver = drivers.sample
         
-            ride = {
-              ride_id: SecureRandom.uuid,
+            # ride = {
+            #   ride_id: SecureRandom.uuid,
+            #   rider_id: user[:user_id],
+            #   driver_id: assigned_driver[:user_id],
+            #   latitude: params[:latitude],
+            #   longitude: params[:longitude],
+            #   status: 'requested',
+            #   created_at: Time.now,
+            #   updated_at: Time.now
+            # }
+
+            ride = Ride.create(
               rider_id: user[:user_id],
               driver_id: assigned_driver[:user_id],
-              latitude: params[:latitude],
-              longitude: params[:longitude],
-              status: 'requested',
-              created_at: Time.now,
-              updated_at: Time.now
-            }
+              latitude_start: params[:latitude],
+              longitude_start: params[:longitude],
+              status: 'requested'
+            )
 
             logger.info("ride  #{ride}")
           

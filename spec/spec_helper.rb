@@ -8,6 +8,7 @@ require 'rack/test'
 require 'rspec'
 require 'webmock/rspec'
 require_relative '../app/api/api'
+require_relative '../config/database'
 
 module RSpecMixin
   include Rack::Test::Methods
