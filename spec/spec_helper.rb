@@ -10,6 +10,7 @@ require 'webmock/rspec'
 require_relative '../config/database'
 require_relative '../app/api/api'
 
+
 module RSpecMixin
   include Rack::Test::Methods
   def app() TransporteAPI end

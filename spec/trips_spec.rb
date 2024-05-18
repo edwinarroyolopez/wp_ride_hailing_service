@@ -76,4 +76,30 @@ RSpec.describe 'Trips API' do
       end
     end
   end
+  # auth
+  describe 'POST /users/login' do
+    context 'when are valid credentials' do
+      let(:params) { { email: 'alice@example.com', pass: 'password1' } }
+
+      it 'return a token' do
+        post '/users/login', params
+        expect(last_response.status).to eq(201)
+        response_body = JSON.parse(last_response.body)
+        expect(response_body).to have_key('token')
+        expect(response_body).to have_key('user_id')
+      end
+    end
+
+    context 'when are invalid credentials' do
+      let(:params) { { email: 'alice@example.com', pass: 'wrongpassword' } }
+
+      it 'return an authentication error' do
+        post '/users/login', params
+        expect(last_response.status).to eq(401)
+        response_body = JSON.parse(last_response.body)
+        expect(response_body['error']).to eq('Unauthorized')
+      end
+    end
+  end
+
 end
