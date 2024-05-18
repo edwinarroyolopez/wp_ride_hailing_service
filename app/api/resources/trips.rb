@@ -44,5 +44,26 @@ module Resources
         end
       end
     end
+
+    resource :finish_ride do
+      desc 'Finish a ride'
+      params do
+        requires :latitude, type: Float, desc: 'Latitude of the finish location'
+        requires :longitude, type: Float, desc: 'Longitude of the finish location'
+        requires :ride_id, type: Integer, desc: 'ID of the ride'
+      end
+      post do
+        jwtToken = headers['Authorization'] ? headers['Authorization'] : params[:Authorization]
+        authenticate!(jwtToken)
+        user = current_user(jwtToken)
+        if user[:user_type] == 'driver'
+          # Aquí iría la lógica para finalizar un viaje
+          { message: 'Ride finished successfully' }
+        else
+          error!('Not allowed', 403)
+        end
+      end
+    end
+
   end
 end

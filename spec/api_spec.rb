@@ -145,8 +145,6 @@ describe TransporteAPI do
   
     context 'cuando el token pertenece a un conductor' do
       let(:valid_driver_token) { encode_token({ user_id: 4 }) }
-      
-
       it 'no permite la solicitud de un viaje y devuelve un error de "no permitido"' do
         header 'Authorization', "Bearer #{valid_driver_token}"
         post '/request_ride', { latitude: 123.456, longitude: -78.910, 'Authorization' => "Bearer #{valid_driver_token}"}
@@ -160,6 +158,41 @@ describe TransporteAPI do
       it 'devuelve un error de autenticación' do
         header 'Authorization', "Bearer #{invalid_token}"
         post '/request_ride', latitude: 123.456, longitude: -78.910
+        expect(last_response.status).to eq(401)
+        expect(JSON.parse(last_response.body)).to eq({ 'error' => 'Unauthorized' })
+      end
+    end
+  end
+
+  describe 'POST /finish_ride' do
+    context 'cuando el token pertenece a un driver' do
+      let(:valid_driver_token) { encode_token({ user_id: 4 }) }
+  
+      it 'permite finalizar un viaje' do
+        header 'Authorization', "Bearer #{valid_driver_token}"
+        post '/finish_ride', { latitude: 123.456, longitude: -78.910, ride_id: 1, 'Authorization' => "Bearer #{valid_driver_token}"}
+        expect(last_response.status).to eq(201)
+        expect(JSON.parse(last_response.body)).to eq({ 'message' => 'Ride finished successfully' })
+      end
+    end
+  
+    context 'cuando el token pertenece a un rider' do
+      let(:valid_rider_token) { encode_token({ user_id: 1 }) }
+  
+      it 'no permite finalizar un viaje y devuelve un error de "no permitido"' do
+        header 'Authorization', "Bearer #{valid_rider_token}"
+        post '/finish_ride', { latitude: 123.456, longitude: -78.910, ride_id: 1, 'Authorization' => "Bearer #{valid_rider_token}" }
+        expect(last_response.status).to eq(403)
+        expect(JSON.parse(last_response.body)).to eq({ 'error' => 'Not allowed' })
+      end
+    end
+  
+    context 'cuando el token no es válido' do
+      let(:invalid_token) { 'invalid_token' }
+  
+      it 'devuelve un error de autenticación' do
+        header 'Authorization', "Bearer #{invalid_token}"
+        post '/finish_ride', latitude: 123.456, longitude: -78.910, ride_id: 1
         expect(last_response.status).to eq(401)
         expect(JSON.parse(last_response.body)).to eq({ 'error' => 'Unauthorized' })
       end
