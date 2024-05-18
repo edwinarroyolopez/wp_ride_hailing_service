@@ -7,8 +7,8 @@ ENV['RACK_ENV'] = 'test'
 require 'rack/test'
 require 'rspec'
 require 'webmock/rspec'
-require_relative '../app/api/api'
 require_relative '../config/database'
+require_relative '../app/api/api'
 
 module RSpecMixin
   include Rack::Test::Methods
