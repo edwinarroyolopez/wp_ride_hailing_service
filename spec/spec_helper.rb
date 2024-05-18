@@ -10,6 +10,11 @@ require 'webmock/rspec'
 require_relative '../config/database'
 require_relative '../app/api/api'
 
+require_relative '../app/api/resources/payments'
+require_relative '../config/env'
+require_relative '../app/models/payment_source'
+
+
 
 module RSpecMixin
   include Rack::Test::Methods
@@ -19,4 +24,16 @@ end
 RSpec.configure do |config|
   config.include RSpecMixin
   WebMock.disable_net_connect!(allow_localhost: true)
+  config.before(:each) do
+    DB[:payment_sources].truncate
+  end
 end
+
+DB = Sequel.connect(
+  adapter: 'postgres',
+  user: 'wp_user',
+  password: 'wp_user',
+  host: 'localhost',
+  port: '5432',
+  database: 'postgres'
+)

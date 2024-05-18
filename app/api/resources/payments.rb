@@ -1,8 +1,11 @@
 require 'grape'
 require 'httparty'
+require_relative '../../models/payment_source'
 
 module Resources
     class Payments < Grape::API
+      format :json
+      logger = Logger.new(STDOUT)
       resource :create_payment_source do
         desc 'Create a new payment source'
         params do
@@ -12,14 +15,30 @@ module Resources
         post do
           jwtToken = headers['Authorization'] ? headers['Authorization'] : params[:Authorization]
           authenticate!(jwtToken)
-          userLogged = decode_token(jwtToken)
-  
+          user = current_user(jwtToken)
+
+        if user[:user_type] == 'rider'
+          pubGatewayKey = params[:pubGatewayKey] ? params[:pubGatewayKey] : ENV['PUB_GATEWAY_KEY']
+
+          logger.info("user #{user}")
+          logger.info("pubGatewayKey #{pubGatewayKey}")
+
+          if PaymentSource.find(rider_id: user[:user_id])
+            error!('Not allowed, Payment source already exists for rider', 403)
+          end
+
+          PaymentSource.create(
+            rider_id: user[:user_id],
+            pub_gateway_key: pubGatewayKey
+          )
+          # { status: 'Payment source created successfully', token: payment_source_data['token'] }
+        
+
           url = "#{ENV['EXTERNAL_API_URL']}/tokens/cards"
-        #   logger.info("external url  #{url}")
-  
+
           headers = {
             'Content-Type' => 'application/json',
-            'Authorization' => "Bearer #{ENV['PUB_GATEWAY_KEY']}"
+            'Authorization' => "Bearer #{pubGatewayKey}"
           }
   
           body = {
@@ -37,6 +56,10 @@ module Resources
           else
             raise StandardError, "Error creating payment source intent: #{response.code} - #{response.body}"
           end
+        else
+          error!('Not allowed', 403)
+        end
+
         end
       end
     end
