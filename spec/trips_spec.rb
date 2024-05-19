@@ -97,7 +97,7 @@ RSpec.describe 'Trips API' do
     let(:pub_gateway_key) { ENV['PUB_GATEWAY_KEY'] }
 
     before do
-      stub_request(:post, "#{external_api_url}/tokens/cards")
+      stub_request(:post, "#{external_api_url}/payment_sources")
         .to_return(status: 200, body: { token: 'card_token' }.to_json, headers: { 'Content-Type' => 'application/json' })
     end
 

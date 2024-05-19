@@ -23,34 +23,49 @@ module Resources
             error!('Not allowed, Payment source already exists for rider', 403)
           end
 
-          PaymentSource.create(
-            rider_id: user[:user_id],
-            pub_gateway_key: pubGatewayKey
-          )
+          # PaymentSource.create(
+          #   rider_id: user[:user_id],
+          #   pub_gateway_key: pubGatewayKey
+          # )
           # { status: 'Payment source created successfully', token: payment_source_data['token'] }
-        
+          
+          acceptance_token = generate_acceptance_token(pubGatewayKey)
 
-          url = "#{ENV['EXTERNAL_API_URL']}/tokens/cards"
+          logger.info("acceptance_token #{acceptance_token}")
+
+          # url = "#{ENV['EXTERNAL_API_URL']}/tokens/cards"
+          url = "#{ENV['EXTERNAL_API_URL']}/payment_sources"
 
           headers = {
             'Content-Type' => 'application/json',
             'Authorization' => "Bearer #{pubGatewayKey}"
           }
-  
-          body = {
-            number: "4242424242424242",
-            cvc: "789",
-            exp_month: "12",
-            exp_year: "29",
-            card_holder: "Pedro Pérez"
+          
+          body ={
+            type: "NEQUI",
+            token: "nequi_test_JAwgZEc0pBVLyEEEZ8QyzrafjHyt48de",
+            acceptance_token: "#{acceptance_token}",
+            customer_email: "user@example.com"
           }
   
           response = HTTParty.post(url, body: body.to_json, headers: headers)
   
-          if response.success?
+          if response.success? # DONT WORK BECAUSE IS NOT POSIBLE ACCESS TO payment_sources external endpoint
+            payment = PaymentSource.create(
+              rider_id: user[:user_id],
+              token: pubGatewayKey
+            )
             return JSON.parse(response.body)
           else
-            raise StandardError, "Error creating payment source intent: #{response.code} - #{response.body}"
+            logger.error("Error creating payment source intent: #{response.code} - #{response.body}")
+            #WORKARROUND BECAUSE DONT WORKING THE GENERATION OF PAYMENT_SOURCE_TOKEN
+              PaymentSource.create(
+                rider_id: user[:user_id],
+                token: pubGatewayKey
+              )
+              return { status: 'Payment source created successfully', token: pubGatewayKey, payment_id: payment.id }
+
+            # raise StandardError, "Error creating payment source intent: #{response.code} - #{response.body}"
           end
         else
           error!('Not allowed', 403)

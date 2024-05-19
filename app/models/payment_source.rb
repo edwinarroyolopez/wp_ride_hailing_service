@@ -6,6 +6,6 @@ class PaymentSource < Sequel::Model
 
   def validate
     super
-    validates_presence [:rider_id, :pub_gateway_key]
+    validates_presence [:rider_id, :token]
   end
 end
