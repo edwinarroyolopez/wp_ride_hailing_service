@@ -32,12 +32,29 @@ RSpec.describe 'Trips API' do
   end
 
   describe 'POST /finish_ride' do
-    context 'when the user is a driver' do
-      it 'finishes the ride successfully' do
-        post '/finish_ride', { latitude: 10.0, longitude: 20.0, ride_id: 1, 'Authorization' => "Bearer #{driver_token}"  }
-        expect(last_response.status).to eq(201)
-        expect(JSON.parse(last_response.body)).to include('status' => 'finished')
-      end
+    let!(:ride) do
+      Ride.create(
+        rider_id: 1,
+        driver_id: 4,
+        latitude_start: 40.7128,
+        longitude_start: -74.0060,
+        status: 'requested'
+      )
+    end
+
+    it 'finishes a ride successfully and updates the ride details' do
+      post '/finish_ride', { latitude: 34.0522, longitude: -118.2437, ride_id: ride.id, 'Authorization' => driver_token }
+      expect(last_response.status).to eq(201)
+      response = JSON.parse(last_response.body)
+      
+      expect(response['status']).to eq('finished')
+
+      finished_ride = Ride.find(id: ride.id)
+      expect(finished_ride.status).to eq('finished')
+      expect(finished_ride.latitude_finish).to eq(34.0522)
+      expect(finished_ride.longitude_finish).to eq(-118.2437)
+      # expect(finished_ride.distance).to be_within(0.1).of(calculate_distance(40.7128, -74.0060, 34.0522, -118.2437))
+      expect(finished_ride.elapsed_time).not_to be_nil
     end
 
     context 'when the user is not a driver' do

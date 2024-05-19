@@ -81,11 +81,11 @@ module Resources
           # cal distance between the start location and the finish location
           # create a new transaction and change status
 
-          logger.info("ride  user #{user}")
+          logger.info("diver  user #{user}")
 
           ride = Ride.find(id: params[:ride_id])
           if !ride
-            error!("Not found a ride whith this ride_id: #{params[:ride_id]}", 403)
+            error!("Not found a ride whith this ride_id: #{params[:ride_id]}", 404)
           end
 
           if ride.driver_id != user[:user_id]

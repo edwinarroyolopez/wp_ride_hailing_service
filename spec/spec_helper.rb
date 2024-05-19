@@ -15,7 +15,6 @@ require_relative '../config/env'
 require_relative '../app/models/payment_source'
 
 
-
 module RSpecMixin
   include Rack::Test::Methods
   def app() TransporteAPI end
