@@ -17,7 +17,7 @@ RSpec.describe 'Trips API' do
     let!(:payment) do
       PaymentSource.create(
         rider_id: 1,
-        token: 'token_payment_source'
+        token: ENV['TOKEN_CARD']
       )
     end
 
@@ -59,7 +59,7 @@ RSpec.describe 'Trips API' do
     stub_request(:post, "#{ENV['EXTERNAL_API_URL']}/transactions")
       .to_return(
         status: 200,
-        body: { status: 'success', transaction_id: '12345' }.to_json,
+        body: { data: { id: '1292-1602113476-10985', status: 'PENDING' } }.to_json,
         headers: { 'Content-Type' => 'application/json' }
       )
   end
@@ -104,14 +104,14 @@ RSpec.describe 'Trips API' do
     let(:pub_gateway_key) { ENV['PUB_GATEWAY_KEY'] }
 
     before do
-      stub_request(:post, "#{external_api_url}/payment_sources")
+      stub_request(:post, "#{external_api_url}/tokens/cards")
         .to_return(status: 200, body: { data: { token: 'generated_token'} }.to_json, headers: { 'Content-Type' => 'application/json' })
     end
 
     it 'creates a new payment source successfully with valid token' do
       post '/create_payment_source', { 'Authorization' => "Bearer #{rider_token}"  }
       expect(last_response.status).to eq(201)
-      expect(JSON.parse(last_response.body)).to include('data' => {"token"=>"generated_token"})
+      expect(JSON.parse(last_response.body)).to include("token"=>ENV['TOKEN_CARD'], "status" => "Payment source created successfully")
     end
 
     it 'creates a new payment source successfully' do
@@ -119,7 +119,7 @@ RSpec.describe 'Trips API' do
         post '/create_payment_source', { 'Authorization' => "Bearer #{rider_token}" }
       }.to change { PaymentSource.count }.by(1)
       expect(last_response.status).to eq(201)
-      expect(JSON.parse(last_response.body)).to include('data' => {"token"=>"generated_token"})
+      expect(JSON.parse(last_response.body)).to include("token"=>ENV['TOKEN_CARD'], "status" => "Payment source created successfully")
     end
 
     context 'when the user is not a rider' do

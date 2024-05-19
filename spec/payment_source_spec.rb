@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe PaymentSource do
   let(:rider_id) { 1 }
-  let(:token) { 'test_token' }
+  let(:token) { ENV['TOKEN_CARD'] }
 
   it 'creates a new payment source successfully' do
     payment_source = PaymentSource.create(rider_id: rider_id, token: token)

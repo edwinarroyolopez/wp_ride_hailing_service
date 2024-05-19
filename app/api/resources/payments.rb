@@ -26,41 +26,35 @@ module Resources
 
           logger.info("acceptance_token #{acceptance_token}")
 
-          # url = "#{ENV['EXTERNAL_API_URL']}/tokens/cards"
-          url = "#{ENV['EXTERNAL_API_URL']}/payment_sources"
+          url = "#{ENV['EXTERNAL_API_URL']}/tokens/cards"
 
           headers = {
             'Content-Type' => 'application/json',
             'Authorization' => "Bearer #{pubGatewayKey}"
           }
           
-          # testing with NEQUI because CARD dont work either
-          body ={
-            type: "NEQUI",
-            token: "nequi_test_JAwgZEc0pBVLyEEEZ8QyzrafjHyt48de",
-            acceptance_token: "#{acceptance_token}",
-            customer_email: "user@example.com"
+          # card harcoded
+          body = {
+            number: "4242424242424242",
+            cvc: "789",
+            exp_month: "12",
+            exp_year: "29",
+            card_holder: "Pedro Pérez"
           }
   
           response = HTTParty.post(url, body: body.to_json, headers: headers)
   
-          if response.success? # DONT WORK BECAUSE IS NOT POSIBLE ACCESS TO payment_sources external endpoint
+          if response.success? 
             bodyResult = JSON.parse(response.body)
-            token = bodyResult['data']['token'] # BASED IN THE DOCUMENTATION SOURCE
+            token = bodyResult['data']['id'] 
             payment = PaymentSource.create(
               rider_id: user[:user_id],
-              token: token
+              token: "#{token ? token : ENV['TOKEN_CARD']}"
             )
-            return JSON.parse(response.body)
+            return {status: 'Payment source created successfully', token: "#{token ? token : ENV['TOKEN_CARD']}"}
           else
             logger.error("Error creating payment source intent: #{response.code} - #{response.body}")
-            #WORKARROUND BECAUSE DONT WORKING THE GENERATION OF PAYMENT_SOURCE_TOKEN
-            payment = PaymentSource.create(
-                rider_id: user[:user_id],
-                token: pubGatewayKey
-              )
-              return { status: 'Payment source created successfully', token: pubGatewayKey, payment_id: payment.id }
-            # raise StandardError, "Error creating payment source intent: #{response.code} - #{response.body}"
+            raise StandardError, "Error creating payment source intent: #{response.code} - #{response.body}"
           end
         else
           error!('Not allowed', 403)

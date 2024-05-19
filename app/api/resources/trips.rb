@@ -94,6 +94,11 @@ module Resources
             error!("Not allowed, you are not the driver of this ride", 403)
           end
 
+          payment_source = PaymentSource.find(rider_id: ride.rider_id)
+          # TOKEN PAYMENT SOURCE TO MAKE TRANSTACTION
+          paymentToken = payment_source.respond_to?(:token)? payment_source.token : ENV['TOKEN_CARD'] 
+          logger.info(" paymentToken #{paymentToken}")
+
           latitude_start = ride.latitude_start
           longitude_start = ride.longitude_start
           
@@ -136,7 +141,7 @@ module Resources
           acceptance_token = generate_acceptance_token(pubGatewayKey)
             
           logger.info("acceptance_token: #{acceptance_token}")
-
+          
           #  excecute a transaction
           reference = SecureRandom.hex(16)
           
@@ -152,24 +157,32 @@ module Resources
             customer_email: "#{user[:email]}",
             reference: reference,
             payment_method: {
-              type: "NEQUI",
-              phone_number: "3107654321"
+              type: "CARD",
+              token: "#{paymentToken}",
+              installments: 2
             }
           }
-
+          
           logger.info("Generating external transaction")
           external_transaction = generate_external_transaction(body, headers)
-          # return transaction
+          # return external_transaction
            
+          logger.info("external_transaction #{external_transaction}")
+
+          transaction_external_id = external_transaction['data']['id']
+          transaction_external_status = external_transaction['data']['status']
           transaction = Transaction.create(
             ride_id: ride.id,
             cost: cost,
             distance: distance,
-            status: 'finished',
-            id_external_transaction: reference
+            status: transaction_external_status,
+            id_external_transaction: transaction_external_id
           )
 
-          { message: 'Ride finished successfully', status: 'finished', transaction_id: transaction.id }
+          logger.info("Transaction generated...")
+
+
+          { message: 'Ride finished successfully', status: 'finished', transaction_status: transaction_external_status, transaction_id: transaction.id, external_id: transaction_external_id }
         else
           error!(validation.errors.to_h, 400)
         end
