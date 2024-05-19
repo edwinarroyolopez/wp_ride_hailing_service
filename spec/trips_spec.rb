@@ -14,6 +14,13 @@ RSpec.describe 'Trips API' do
   let(:driver_token) { JWT.encode({ user_id: 4, user_type: 'driver' }, secret_key, 'HS256') }
 
   describe 'POST /request_ride' do
+    let!(:payment) do
+      PaymentSource.create(
+        rider_id: 1,
+        token: 'token_payment_source'
+      )
+    end
+
     context 'when the user is a rider' do
       it 'requests a ride successfully' do
         post '/request_ride', { latitude: 10.0, longitude: 20.0, 'Authorization' => "Bearer #{rider_token}"}

@@ -4,6 +4,7 @@ require 'httparty'
 require 'securerandom'
 require_relative '../../models/ride'
 require_relative '../../validators/ride_schema'
+require_relative '../../models/payment_source'
 
 module Resources
   class Trips < Grape::API
@@ -26,18 +27,23 @@ module Resources
         validation = Validators::RideRequestSchema.call(params)
 
         if validation.success?
-            drivers = USERS.select { |u| u[:user_type] == 'driver' }
-            assigned_driver = drivers.sample
-      
-            ride = Ride.create(
-              rider_id: user[:user_id],
-              driver_id: assigned_driver[:user_id],
-              latitude_start: params[:latitude],
-              longitude_start: params[:longitude],
-              status: 'requested'
-            )
+          # Verify that the payment source exists before create the new ride
+          if !PaymentSource.find(rider_id: user[:user_id])
+            error!('Not allowed, Payment source dond exists for this rider, you need create a payment source first', 403)
+          end
 
-            logger.info("ride  #{ride}")
+          drivers = USERS.select { |u| u[:user_type] == 'driver' }
+          assigned_driver = drivers.sample
+    
+          ride = Ride.create(
+            rider_id: user[:user_id],
+            driver_id: assigned_driver[:user_id],
+            latitude_start: params[:latitude],
+            longitude_start: params[:longitude],
+            status: 'requested'
+          )
+
+          logger.info("ride  #{ride}")
           
           { message: 'Ride requested successfully', status: 'requested', ride_id:ride.id, driver_id:ride.driver_id }
         else

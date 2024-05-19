@@ -11,20 +11,41 @@
 ## Folder Structure
 ```
 ├── app/
-│   ├── api.rb
-│   └── models.rb
-│
+│   ├── api/
+│   │   ├── helpers/
+│   │   │   ├── authentication_helper.rb
+│   │   │   ├── payment_helper.rb
+│   │   │   └── ride_helper.rb
+│   │   ├── resources/
+│   │   │   ├── payments.rb
+│   │   │   ├── trips.rb
+│   │   │   └── users.rb
+│   │   └── validators/
+│   │       └── ride_schema.rb
+│   ├── models/
+│   │   └── ride.rb
 ├── config/
-│   ├── env.rb
-│
+│   ├── environment.rb
+│   └── initializers/
+│       └── setup.rb
+├── db/
+│   ├── migrate/
+│   └── schema.rb
 ├── spec/
-│   ├── spec_helper.rb
-│   ├── api_spec.rb
-│   └── ride_spec.rb
-│
+│   ├── api/
+│   │   ├── helpers/
+│   │   │   ├── authentication_helper_spec.rb
+│   │   │   ├── payment_helper_spec.rb
+│   │   │   └── ride_helper_spec.rb
+│   │   ├── resources/
+│   │   │   ├── payments_spec.rb
+│   │   │   ├── trips_spec.rb
+│   │   │   └── users_spec.rb
+│   ├── models/
+│   │   └── ride_spec.rb
+│   └── spec_helper.rb
 ├── config.ru
 ├── Gemfile
-├── Gemfile.lock
 ├── Rakefile
 └── readme.md
 ```
@@ -39,7 +60,7 @@ To run  this command ```rackup -p 3000```
 
 # Migrations
 To run migrations this command ```sequel -m db/migrations postgres://DB_USER:DB_PASSWORD@DB_HOST/DB_NAME```
-
+OR ```rake db:migrate```
 
 ## Test 
 

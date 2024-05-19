@@ -55,7 +55,7 @@ module Resources
           else
             logger.error("Error creating payment source intent: #{response.code} - #{response.body}")
             #WORKARROUND BECAUSE DONT WORKING THE GENERATION OF PAYMENT_SOURCE_TOKEN
-              PaymentSource.create(
+            payment = PaymentSource.create(
                 rider_id: user[:user_id],
                 token: pubGatewayKey
               )
