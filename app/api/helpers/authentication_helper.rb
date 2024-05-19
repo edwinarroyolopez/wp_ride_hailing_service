@@ -34,7 +34,7 @@ module AuthenticationHelper
     decoded_token = decode_token(token)
     user = USERS.find { |u| u[:user_id] == decoded_token['user_id'] }
     return user if user
-  
     error!('Unauthorized', 401)
   end
+  
 end

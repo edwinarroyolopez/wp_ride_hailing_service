@@ -8,10 +8,6 @@ module Resources
       logger = Logger.new(STDOUT)
       resource :create_payment_source do
         desc 'Create a new payment source'
-        params do
-          requires :userId, type: String, desc: 'Id of the user'
-          requires :user_type, type: String, desc: 'User type (driver o rider)'
-        end
         post do
           jwtToken = headers['Authorization'] ? headers['Authorization'] : params[:Authorization]
           authenticate!(jwtToken)

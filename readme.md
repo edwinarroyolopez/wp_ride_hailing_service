@@ -58,16 +58,17 @@ https://coveralls.io/github/edwinarroyolopez/wp_ride_hailing_service?branch=mast
 ![Logo](https://code.dblock.org/images/posts/2015/2015-08-04-ruby-grape/grape.png)
 
 
-
 TODO:
-    🔲 Create payment method
     🔲 Create postman collection
     🔲 Create documentation 
     🔲 Generate transaction with payment method with external api
     🔲 Keep unit tests
 
+    🔲 Insert transaction with payment method
+    
+
 DONE:
-    ✅ Task One
+    ✅ Create payment method
 
 
 

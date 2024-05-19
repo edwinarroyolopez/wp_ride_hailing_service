@@ -76,14 +76,14 @@ RSpec.describe 'Trips API' do
     end
 
     it 'creates a new payment source successfully with valid token' do
-      post '/create_payment_source', { userId: '1', user_type: 'rider', 'Authorization' => "Bearer #{rider_token}"  }
+      post '/create_payment_source', { 'Authorization' => "Bearer #{rider_token}"  }
       expect(last_response.status).to eq(201)
       expect(JSON.parse(last_response.body)).to include('token' => 'card_token')
     end
 
     it 'creates a new payment source successfully' do
       expect {
-        post '/create_payment_source', { userId: '1', user_type: 'rider', 'Authorization' => "Bearer #{rider_token}" }
+        post '/create_payment_source', { 'Authorization' => "Bearer #{rider_token}" }
       }.to change { PaymentSource.count }.by(1)
       expect(last_response.status).to eq(201)
       expect(JSON.parse(last_response.body)).to include('token' => 'card_token')
@@ -91,7 +91,7 @@ RSpec.describe 'Trips API' do
 
     context 'when the user is not a rider' do
       it 'returns an error' do
-        post '/create_payment_source', { userId: '2', user_type: 'driver', 'Authorization' => "Bearer #{driver_token}" }
+        post '/create_payment_source', {'Authorization' => "Bearer #{driver_token}" }
         expect(last_response.status).to eq(403)
         expect(JSON.parse(last_response.body)).to include('error' => 'Not allowed')
       end
@@ -99,11 +99,10 @@ RSpec.describe 'Trips API' do
     
 
     context 'when the token is invalid' do
-      let(:params) { { userId: '1', user_type: 'driver' } }
       let(:invalid_token) { 'invalid_token' }
 
       it 'returns an authentication error' do
-        post '/create_payment_source', params, { 'Authorization' => "Bearer #{invalid_token}" }
+        post '/create_payment_source', { 'Authorization' => "Bearer #{invalid_token}" }
         expect(last_response.status).to eq(401)
         response_body = JSON.parse(last_response.body)
         expect(response_body['error']).to eq('Unauthorized')
