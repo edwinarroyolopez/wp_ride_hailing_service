@@ -23,7 +23,7 @@ RSpec.describe 'Trips API' do
 
     context 'when the user is a rider' do
       it 'requests a ride successfully' do
-        post '/request_ride', { latitude: 10.0, longitude: 20.0, 'Authorization' => "Bearer #{rider_token}"}
+        post '/request_ride', { latitude: 34.0522, longitude: -118.2437, 'Authorization' => "Bearer #{rider_token}"}
         expect(last_response.status).to eq(201)
         expect(JSON.parse(last_response.body)).to include('status' => 'requested')
       end
@@ -31,7 +31,7 @@ RSpec.describe 'Trips API' do
 
     context 'when the user is not a rider' do
       it 'returns an error' do
-        post '/request_ride', { latitude: 10.0, longitude: 20.0, 'Authorization' => "Bearer #{driver_token}"  }
+        post '/request_ride', { latitude: 34.0522, longitude: -118.2437, 'Authorization' => "Bearer #{driver_token}"  }
         expect(last_response.status).to eq(403)
         expect(JSON.parse(last_response.body)).to include('error' => 'Not allowed')
       end
@@ -41,8 +41,8 @@ RSpec.describe 'Trips API' do
   let(:pub_gateway_key) { ENV['PUB_GATEWAY_KEY'] }
   let(:user_token) { 'test_token' }
   let(:headers) { { 'Authorization' => user_token } }
-  let(:rider) { { user_id: 1, user_type: 'rider', email: 'rider@example.com' } }
-  let(:driver) { { user_id: 2, user_type: 'driver', email: 'driver@example.com' } }
+  let(:rider) { { user_id: 3, user_type: 'rider', email: 'rider@example.com' } }
+  let(:driver) { { user_id: 5, user_type: 'driver', email: 'driver@example.com' } }
   let(:ride) { Ride.create(rider_id: rider[:user_id], driver_id: driver[:user_id], latitude_start: 1.0, longitude_start: 1.0, status: 'requested') }
 
   before do
@@ -68,7 +68,7 @@ RSpec.describe 'Trips API' do
 
     let!(:ride) do
       Ride.create(
-        rider_id: 1,
+        rider_id: 2,
         driver_id: 4,
         latitude_start: 40.7128,
         longitude_start: -74.0060,
@@ -92,7 +92,7 @@ RSpec.describe 'Trips API' do
 
     context 'when the user is not a driver' do
       it 'returns an error' do
-        post '/finish_ride', { latitude: 10.0, longitude: 20.0, ride_id: 1, 'Authorization' => "Bearer #{rider_token}" }
+        post '/finish_ride', { latitude: 10.0, longitude: 20.0, ride_id: 2, 'Authorization' => "Bearer #{rider_token}" }
         expect(last_response.status).to eq(403)
         expect(JSON.parse(last_response.body)).to include('error' => 'Not allowed')
       end

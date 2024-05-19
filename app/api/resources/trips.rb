@@ -5,6 +5,7 @@ require 'securerandom'
 require_relative '../../models/ride'
 require_relative '../../validators/ride_schema'
 require_relative '../../models/payment_source'
+require_relative '../../models/transaction'
 
 module Resources
   class Trips < Grape::API
@@ -31,6 +32,12 @@ module Resources
           if !PaymentSource.find(rider_id: user[:user_id])
             error!('Not allowed, Payment source dond exists for this rider, you need create a payment source first', 403)
           end
+
+          # additional validation
+          # oldRide = Ride.find(rider_id: user[:user_id], status: 'requested')
+          # if oldRide
+          #   error!("Cannot created a new ride because you already an open ride: #{oldRide.id}", 403)
+          # end
 
           drivers = USERS.select { |u| u[:user_type] == 'driver' }
           assigned_driver = drivers.sample
@@ -77,6 +84,10 @@ module Resources
           ride = Ride.find(id: params[:ride_id])
           if !ride
             error!("Not found a ride whith this ride_id: #{params[:ride_id]}", 404)
+          end
+
+          if ride.status != 'requested'
+            error!("Not allowed, the ride was finished before", 403)
           end
 
           if ride.driver_id != user[:user_id]
@@ -136,7 +147,7 @@ module Resources
 
           body = {
             acceptance_token: "#{acceptance_token}",
-            amount_in_cents: cost,
+            amount_in_cents: cost*100,
             currency: "COP",
             customer_email: "#{user[:email]}",
             reference: reference,
@@ -147,10 +158,18 @@ module Resources
           }
 
           logger.info("Generating external transaction")
-          transaction = generate_external_transaction(body, headers)
-          return transaction
-          
-          { message: 'Ride finished successfully', status: 'finished' }
+          external_transaction = generate_external_transaction(body, headers)
+          # return transaction
+           
+          transaction = Transaction.create(
+            ride_id: ride.id,
+            cost: cost,
+            distance: distance,
+            status: 'finished',
+            id_external_transaction: reference
+          )
+
+          { message: 'Ride finished successfully', status: 'finished', transaction_id: transaction.id }
         else
           error!(validation.errors.to_h, 400)
         end
