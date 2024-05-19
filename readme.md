@@ -56,8 +56,8 @@
 To install run this command ```bundle install```
 
 ## Start 
-
-To run  this command ```rackup -p 3000```
+1. Replace file config/env-example.rb by config/env.rb and  set your environments vars
+2. To start  this command ```rackup -p 3000```
 
 # Migrations
 To run migrations this command ```sequel -m db/migrations postgres://DB_USER:DB_PASSWORD@DB_HOST/DB_NAME```
