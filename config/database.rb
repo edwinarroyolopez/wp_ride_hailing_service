@@ -15,15 +15,6 @@ DB = Sequel.connect(
   database: ENV['DB_NAME']
 )
 
-# hardcode my local database
-# DB = Sequel.connect(
-#   adapter: 'postgres',
-#   user: 'wp_user',
-#   password: 'wp_user',
-#   host: 'localhost',
-#   port: '5432',
-#   database: 'postgres'
-# )
 
 Sequel::Model.plugin :timestamps, update_on_create: true
 Sequel::Model.plugin :validation_helpers

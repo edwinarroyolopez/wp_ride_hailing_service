@@ -30,9 +30,9 @@ end
 
 DB = Sequel.connect(
   adapter: 'postgres',
-  user: 'wp_user',
-  password: 'wp_user',
-  host: 'localhost',
-  port: '5432',
-  database: 'postgres'
+  user: ENV['DB_USER'],
+  password: ENV['DB_PASSWORD'],
+  host: ENV['DB_HOST'],
+  port: ENV['DB_PORT'],
+  database: ENV['DB_NAME']
 )
