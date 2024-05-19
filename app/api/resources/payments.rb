@@ -14,20 +14,13 @@ module Resources
           user = current_user(jwtToken)
 
         if user[:user_type] == 'rider'
-          pubGatewayKey = params[:pubGatewayKey] ? params[:pubGatewayKey] : ENV['PUB_GATEWAY_KEY']
+          pubGatewayKey = params[:pubGatewayKey] ? params[:pubGatewayKey] : ENV['PUB_GATEWAY_KEY'] # IF THIS PARAM IS SET MAYBY WORKING
 
           logger.info("user #{user}")
-          logger.info("pubGatewayKey #{pubGatewayKey}")
 
           if PaymentSource.find(rider_id: user[:user_id])
             error!('Not allowed, Payment source already exists for rider', 403)
           end
-
-          # PaymentSource.create(
-          #   rider_id: user[:user_id],
-          #   pub_gateway_key: pubGatewayKey
-          # )
-          # { status: 'Payment source created successfully', token: payment_source_data['token'] }
           
           acceptance_token = generate_acceptance_token(pubGatewayKey)
 
@@ -64,7 +57,6 @@ module Resources
                 token: pubGatewayKey
               )
               return { status: 'Payment source created successfully', token: pubGatewayKey, payment_id: payment.id }
-
             # raise StandardError, "Error creating payment source intent: #{response.code} - #{response.body}"
           end
         else
