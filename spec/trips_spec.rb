@@ -98,13 +98,13 @@ RSpec.describe 'Trips API' do
 
     before do
       stub_request(:post, "#{external_api_url}/payment_sources")
-        .to_return(status: 200, body: { token: 'card_token' }.to_json, headers: { 'Content-Type' => 'application/json' })
+        .to_return(status: 200, body: { data: { token: 'generated_token'} }.to_json, headers: { 'Content-Type' => 'application/json' })
     end
 
     it 'creates a new payment source successfully with valid token' do
       post '/create_payment_source', { 'Authorization' => "Bearer #{rider_token}"  }
       expect(last_response.status).to eq(201)
-      expect(JSON.parse(last_response.body)).to include('token' => 'card_token')
+      expect(JSON.parse(last_response.body)).to include('data' => {"token"=>"generated_token"})
     end
 
     it 'creates a new payment source successfully' do
@@ -112,7 +112,7 @@ RSpec.describe 'Trips API' do
         post '/create_payment_source', { 'Authorization' => "Bearer #{rider_token}" }
       }.to change { PaymentSource.count }.by(1)
       expect(last_response.status).to eq(201)
-      expect(JSON.parse(last_response.body)).to include('token' => 'card_token')
+      expect(JSON.parse(last_response.body)).to include('data' => {"token"=>"generated_token"})
     end
 
     context 'when the user is not a rider' do
