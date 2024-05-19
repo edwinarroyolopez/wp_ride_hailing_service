@@ -40,7 +40,6 @@ module Resources
         error!('Not allowed', 403) unless user[:user_type] == 'rider'
         validation = Validators::RideRequestSchema.call(params)
 
-
         if validation.success?
             drivers = USERS.select { |u| u[:user_type] == 'driver' }
             assigned_driver = drivers.sample
@@ -78,7 +77,57 @@ module Resources
         validation = Validators::RideFinishSchema.call(params)
 
         if validation.success?
-          # Aquí iría la lógica para finalizar un viaje
+          # find a ride
+          # cal distance between the start location and the finish location
+          # create a new transaction and change status
+
+          logger.info("ride  user #{user}")
+
+          ride = Ride.find(id: params[:ride_id])
+          if !ride
+            error!("Not found a ride whith this ride_id: #{params[:ride_id]}", 403)
+          end
+
+          if ride.driver_id != user[:user_id]
+            error!("Not allowed, you are not the driver of this ride", 403)
+          end
+
+          latitude_start = ride.latitude_start
+          longitude_start = ride.longitude_start
+          
+          latitude_finish = params[:latitude]
+          longitude_finish = params[:longitude]
+          
+          # validate that the driver is same on ride
+          logger.info("ride  driver_id #{ride.driver_id}")
+          logger.info("ride  latitude_start: #{ride.latitude_start} longitude_start: #{ride.longitude_start}")
+          logger.info("ride  latitude_finish: #{latitude_finish} longitude_finish: #{longitude_finish}")
+          distance = calculate_distance(latitude_start, longitude_start, latitude_finish, longitude_finish)
+          distance = distance.round
+
+          logger.info("ride  distance #{distance}")
+          timeStart = ride.created_at
+          timeEnd = Time.now
+          
+          logger.info("ride  timeStart: #{timeStart} timeEnd: #{timeEnd}")
+
+          timeElapsed = calculate_time_elapsed(timeStart, timeEnd)
+
+          logger.info("ride  timeElapsed: #{timeElapsed}")
+
+          # Update the ride status to finished and update coordinates
+          ride.update(
+            latitude_finish: params[:latitude],
+            longitude_finish: params[:longitude],
+            distance: distance,
+            elapsed_time: timeElapsed,
+            status: 'finished'
+          )
+
+          cost = calculate_cost(distance,timeElapsed)
+          
+          logger.info("cost: #{cost}")
+
           { message: 'Ride finished successfully', status: 'finished' }
         else
           error!(validation.errors.to_h, 400)
