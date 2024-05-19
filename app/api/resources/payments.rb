@@ -34,6 +34,7 @@ module Resources
             'Authorization' => "Bearer #{pubGatewayKey}"
           }
           
+          # testing with NEQUI because CARD dont work either
           body ={
             type: "NEQUI",
             token: "nequi_test_JAwgZEc0pBVLyEEEZ8QyzrafjHyt48de",
@@ -44,9 +45,11 @@ module Resources
           response = HTTParty.post(url, body: body.to_json, headers: headers)
   
           if response.success? # DONT WORK BECAUSE IS NOT POSIBLE ACCESS TO payment_sources external endpoint
+            bodyResult = JSON.parse(response.body)
+            token = bodyResult['data']['token'] # BASED IN THE DOCUMENTATION SOURCE
             payment = PaymentSource.create(
               rider_id: user[:user_id],
-              token: pubGatewayKey
+              token: token
             )
             return JSON.parse(response.body)
           else
