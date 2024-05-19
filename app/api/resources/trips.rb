@@ -1,5 +1,7 @@
 require 'logger'
 require 'dry-validation'
+require 'httparty'
+require 'securerandom'
 require_relative '../../models/ride'
 require_relative '../../validators/ride_schema'
 
@@ -7,6 +9,7 @@ module Resources
   class Trips < Grape::API
     format :json
     logger = Logger.new(STDOUT)
+    BASE_URL = ENV['EXTERNAL_API_URL']
 
     resource :request_ride do
       desc 'Request a new ride'
@@ -36,7 +39,7 @@ module Resources
 
             logger.info("ride  #{ride}")
           
-          { message: 'Ride requested successfully', status: 'requested' }
+          { message: 'Ride requested successfully', status: 'requested', ride_id:ride.id, driver_id:ride.driver_id }
         else
           error!(validation.errors.to_h, 400)
         end
@@ -110,6 +113,37 @@ module Resources
 
           logger.info("cost: #{cost}")
 
+          pubGatewayKey = params[:pubGatewayKey] ? params[:pubGatewayKey] : ENV['PUB_GATEWAY_KEY']
+          # Generate the acceptation token
+          logger.info("Generating the acceptation token")
+          acceptance_token = generate_acceptance_token(pubGatewayKey)
+            
+          logger.info("acceptance_token: #{acceptance_token}")
+
+          #  excecute a transaction
+          reference = SecureRandom.hex(16)
+          
+          headers = {
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer #{pubGatewayKey}"
+          }
+
+          body = {
+            acceptance_token: "#{acceptance_token}",
+            amount_in_cents: cost,
+            currency: "COP",
+            customer_email: "#{user[:email]}",
+            reference: reference,
+            payment_method: {
+              type: "NEQUI",
+              phone_number: "3107654321"
+            }
+          }
+
+          logger.info("Generating external transaction")
+          transaction = generate_external_transaction(body, headers)
+          return transaction
+          
           { message: 'Ride finished successfully', status: 'finished' }
         else
           error!(validation.errors.to_h, 400)

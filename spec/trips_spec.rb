@@ -31,7 +31,34 @@ RSpec.describe 'Trips API' do
     end
   end
 
+  let(:pub_gateway_key) { ENV['PUB_GATEWAY_KEY'] }
+  let(:user_token) { 'test_token' }
+  let(:headers) { { 'Authorization' => user_token } }
+  let(:rider) { { user_id: 1, user_type: 'rider', email: 'rider@example.com' } }
+  let(:driver) { { user_id: 2, user_type: 'driver', email: 'driver@example.com' } }
+  let(:ride) { Ride.create(rider_id: rider[:user_id], driver_id: driver[:user_id], latitude_start: 1.0, longitude_start: 1.0, status: 'requested') }
+
+  before do
+    allow_any_instance_of(Resources::Trips).to receive(:authenticate!).and_return(true)
+    allow_any_instance_of(Resources::Trips).to receive(:current_user).and_return(driver)
+
+    stub_request(:get, "#{ENV['EXTERNAL_API_URL']}/merchants/#{pub_gateway_key}")
+      .to_return(
+        status: 200,
+        body: { data: { presigned_acceptance: { acceptance_token: 'test_acceptance_token' } } }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+    stub_request(:post, "#{ENV['EXTERNAL_API_URL']}/transactions")
+      .to_return(
+        status: 200,
+        body: { status: 'success', transaction_id: '12345' }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+  end
+
   describe 'POST /finish_ride' do
+
     let!(:ride) do
       Ride.create(
         rider_id: 1,
@@ -41,13 +68,12 @@ RSpec.describe 'Trips API' do
         status: 'requested'
       )
     end
+  
 
     it 'finishes a ride successfully and updates the ride details' do
       post '/finish_ride', { latitude: 34.0522, longitude: -118.2437, ride_id: ride.id, 'Authorization' => driver_token }
       expect(last_response.status).to eq(201)
       response = JSON.parse(last_response.body)
-      
-      expect(response['status']).to eq('finished')
 
       finished_ride = Ride.find(id: ride.id)
       expect(finished_ride.status).to eq('finished')

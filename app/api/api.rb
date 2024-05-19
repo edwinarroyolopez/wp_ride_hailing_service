@@ -4,6 +4,7 @@ require 'securerandom'
 require_relative '../../config/env'
 require_relative 'helpers/authentication_helper'
 require_relative 'helpers/ride_helper'
+require_relative 'helpers/payment_helper'
 
 require_relative 'resources/users'
 require_relative 'resources/payments'
@@ -15,6 +16,7 @@ class TransporteAPI < Grape::API
 
   helpers AuthenticationHelper
   helpers RideHelper
+  helpers PaymentHelper
 
   mount Resources::Users
   mount Resources::Payments
