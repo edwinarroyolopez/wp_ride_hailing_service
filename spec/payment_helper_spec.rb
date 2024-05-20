@@ -7,7 +7,7 @@ RSpec.describe PaymentHelper do
   include PaymentHelper
 
   describe '#generate_acceptance_token' do
-    let(:pub_gateway_key) { 'test_pub_key' }
+    let(:pub_gateway_key) { ENV['PUB_GATEWAY_KEY'] }
     let(:url) { "#{ENV['EXTERNAL_API_URL']}/merchants/#{pub_gateway_key}" }
 
     before do
@@ -26,7 +26,7 @@ RSpec.describe PaymentHelper do
     end
 
     it 'generates an acceptance token successfully' do
-      token = generate_acceptance_token(pub_gateway_key)
+      token = generate_acceptance_token()
       expect(token).to eq('test_acceptance_token')
     end
 
@@ -35,7 +35,7 @@ RSpec.describe PaymentHelper do
         .to_return(status: 500, body: 'Internal Server Error')
 
       expect {
-        generate_acceptance_token(pub_gateway_key)
+        generate_acceptance_token()
       }.to raise_error(StandardError, /Error getting aceptation token/)
     end
   end
@@ -45,20 +45,21 @@ RSpec.describe PaymentHelper do
     let(:body) do
       {
         acceptance_token: "test_acceptance_token",
-        amount_in_cents: 1000,
+        amount_in_cents: 20000*100,
         currency: "COP",
         customer_email: "test@example.com",
-        reference: "test_reference",
+        reference: "#{20000*100}-test@example.com",
         payment_method: {
-          type: "NEQUI",
-          phone_number: "3107654321"
+          type: "CARD",
+          token: "#{ENV['TOKEN_CARD']}",
+          installments: 2
         }
       }
     end
     let(:headers) do
       {
         'Content-Type' => 'application/json',
-        'Authorization' => 'Bearer test_pub_key'
+        'Authorization' => "Bearer #{ENV['PUB_GATEWAY_KEY']}"
       }
     end
 
@@ -73,7 +74,7 @@ RSpec.describe PaymentHelper do
     end
 
     it 'generates an external transaction successfully' do
-      response = generate_external_transaction(body, headers)
+      response = generate_external_transaction('test_acceptance_token', ENV['TOKEN_CARD'], 'test@example.com', 20000)
       expect(response['status']).to eq('success')
       expect(response['transaction_id']).to eq('12345')
     end
@@ -83,7 +84,7 @@ RSpec.describe PaymentHelper do
         .to_return(status: 500, body: 'Internal Server Error')
 
       expect {
-        generate_external_transaction(body, headers)
+        generate_external_transaction('test_acceptance_token', ENV['TOKEN_CARD'], 'test@example.com', 250000)
       }.to raise_error(StandardError, /Error while was generating the transaction/)
     end
   end

@@ -1,7 +1,6 @@
 require 'logger'
 require 'dry-validation'
 require 'httparty'
-require 'securerandom'
 require_relative '../../models/ride'
 require_relative '../../validators/ride_schema'
 require_relative '../../models/payment_source'
@@ -30,31 +29,8 @@ module Resources
         validation = Validators::RideRequestSchema.call(params)
 
         if validation.success?
-          # Verify that the payment source exists before create the new ride
-          if !PaymentSource.find(rider_id: user[:user_id])
-            error!('Not allowed, Payment source dond exists for this rider, you need create a payment source first', 403)
-          end
-
-          # additional validation
-          # oldRide = Ride.find(rider_id: user[:user_id], status: 'requested')
-          # if oldRide
-          #   error!("Cannot created a new ride because you already an open ride: #{oldRide.id}", 403)
-          # end
-
-          drivers = USERS.select { |u| u[:user_type] == 'driver' }
-          assigned_driver = drivers.sample
-    
-          ride = Ride.create(
-            rider_id: user[:user_id],
-            driver_id: assigned_driver[:user_id],
-            latitude_start: params[:latitude],
-            longitude_start: params[:longitude],
-            status: 'requested'
-          )
-
-          logger.info("ride  #{ride}")
-          
-          { message: 'Ride requested successfully', status: 'requested', ride_id:ride.id, driver_id:ride.driver_id }
+          logger.info("Creating ride to user #{user}")
+          request_ride(params, user)
         else
           error!(validation.errors.to_h, 400)
         end
@@ -77,52 +53,31 @@ module Resources
         validation = Validators::RideFinishSchema.call(params)
 
         if validation.success?
-          # find a ride
-          # cal distance between the start location and the finish location
-          # create a new transaction and change status
+          logger.info("Finishing ride...")
+          logger.info("Validating ride...")
+          ride = validations_ride(params[:ride_id], user[:user_id])
+          logger.info("Generating payment source token...")
+          payment_token = get_payment_source(ride.rider_id)# TOKEN PAYMENT SOURCE TO MAKE TRANSTACTION
 
-          logger.info("diver  user #{user}")
-
-          ride = Ride.find(id: params[:ride_id])
-          if !ride
-            error!("Not found a ride whith this ride_id: #{params[:ride_id]}", 404)
-          end
-
-          if ride.status != 'requested'
-            error!("Not allowed, the ride was finished before", 403)
-          end
-
-          if ride.driver_id != user[:user_id]
-            error!("Not allowed, you are not the driver of this ride", 403)
-          end
-
-          payment_source = PaymentSource.find(rider_id: ride.rider_id)
-          # TOKEN PAYMENT SOURCE TO MAKE TRANSTACTION
-          paymentToken = payment_source.respond_to?(:token)? payment_source.token : ENV['TOKEN_CARD'] 
-          logger.info(" paymentToken #{paymentToken}")
-
+          # latitude and longitude parameters
           latitude_start = ride.latitude_start
           longitude_start = ride.longitude_start
-          
           latitude_finish = params[:latitude]
           longitude_finish = params[:longitude]
           
-          # validate that the driver is same on ride
-          logger.info("ride  driver_id #{ride.driver_id}")
-          logger.info("ride  latitude_start: #{ride.latitude_start} longitude_start: #{ride.longitude_start}")
-          logger.info("ride  latitude_finish: #{latitude_finish} longitude_finish: #{longitude_finish}")
+          logger.info("Calculing ride distance...")
           distance = calculate_distance(latitude_start, longitude_start, latitude_finish, longitude_finish)
           distance = distance.round
+          logger.info("Ride distance #{distance}")
 
-          logger.info("ride  distance #{distance}")
+          logger.info("Calculing time elapsed in the ride...")
           timeStart = ride.created_at
-          timeEnd = Time.now
-          
-          logger.info("ride  timeStart: #{timeStart} timeEnd: #{timeEnd}")
+          timeElapsed = calculate_time_elapsed(timeStart)
+          logger.info("Ride time elapsed: #{timeElapsed}")
 
-          timeElapsed = calculate_time_elapsed(timeStart, timeEnd)
-
-          logger.info("ride  timeElapsed: #{timeElapsed}")
+          logger.info("Calculing ride cost...")
+          cost = calculate_cost(distance,timeElapsed)
+          logger.info("Ride cost: #{cost}")
 
           # Update the ride status to finished and update coordinates
           ride.update(
@@ -133,46 +88,20 @@ module Resources
             status: 'finished'
           )
 
-          cost = calculate_cost(distance,timeElapsed)
-
-          logger.info("cost: #{cost}")
-
-          pubGatewayKey = params[:pubGatewayKey] ? params[:pubGatewayKey] : ENV['PUB_GATEWAY_KEY']
           # Generate the acceptation token
           logger.info("Generating the acceptation token")
-          acceptance_token = generate_acceptance_token(pubGatewayKey)
-            
-          logger.info("acceptance_token: #{acceptance_token}")
-          
-          #  excecute a transaction
-          reference = SecureRandom.hex(16)
-          
-          headers = {
-            'Content-Type' => 'application/json',
-            'Authorization' => "Bearer #{pubGatewayKey}"
-          }
-
-          body = {
-            acceptance_token: "#{acceptance_token}",
-            amount_in_cents: cost*100,
-            currency: "COP",
-            customer_email: "#{user[:email]}",
-            reference: reference,
-            payment_method: {
-              type: "CARD",
-              token: "#{paymentToken}",
-              installments: 2
-            }
-          }
+          acceptance_token = generate_acceptance_token()
+          logger.info("Acceptance token generated: #{acceptance_token}")
           
           logger.info("Generating external transaction")
-          external_transaction = generate_external_transaction(body, headers)
+          external_transaction = generate_external_transaction(acceptance_token, payment_token, user[:email], cost)
           # return external_transaction
            
-          logger.info("external_transaction #{external_transaction}")
+          logger.info("External transaction generated #{external_transaction}")
 
           transaction_external_id = external_transaction['data']['id']
           transaction_external_status = external_transaction['data']['status']
+          # # # # # # # # # # :P # # # # # # # # # #
           transaction = Transaction.create(
             ride_id: ride.id,
             cost: cost,
@@ -181,8 +110,7 @@ module Resources
             id_external_transaction: transaction_external_id
           )
 
-          logger.info("Transaction generated...")
-
+          logger.info("Transaction generated on localdb...")
 
           { message: 'Ride finished successfully', status: 'finished', transaction_status: transaction_external_status, transaction_id: transaction.id, external_id: transaction_external_id }
         else

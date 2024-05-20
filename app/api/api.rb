@@ -5,7 +5,7 @@ require_relative '../../config/env'
 require_relative '../../config/constants'
 
 require_relative 'helpers/authentication_helper'
-require_relative 'helpers/ride_helper'
+require_relative 'helpers/trip_helper'
 require_relative 'helpers/payment_helper'
 
 require_relative 'resources/users'

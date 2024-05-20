@@ -1,4 +1,5 @@
 require 'httparty'
+require 'securerandom'
 require_relative '../../models/payment_source'
 
 module PaymentHelper
@@ -6,8 +7,8 @@ module PaymentHelper
   TOKEN_CARD = Constants::TOKEN_CARD
   PUB_GATEWAY_KEY = Constants::PUB_GATEWAY_KEY 
 
-  def generate_acceptance_token(pubGatewayKey)
-      url = "#{BASE_URL}/merchants/#{pubGatewayKey}"
+  def generate_acceptance_token()
+      url = "#{BASE_URL}/merchants/#{PUB_GATEWAY_KEY}"
       response = HTTParty.get(url)
 
       if response.success?
@@ -46,15 +47,34 @@ module PaymentHelper
       )
       return {status: 'Payment source created successfully', token: "#{token ? token : ENV['TOKEN_CARD']}"}
     else
-      logger.error("Error creating payment source intent: #{response.code} - #{response.body}")
       raise StandardError, "Error creating payment source intent: #{response.code} - #{response.body}"
     end
   end
 
-  def generate_external_transaction(body, headers)
+  def generate_external_transaction(acceptance_token, payment_token, email, cost)
+    #  create the reference
+    #reference = SecureRandom.hex(16)
     url = "#{BASE_URL}/transactions"
-    response =  HTTParty.post(url, body: body.to_json, headers: headers)
+      
+     headers = {
+       'Content-Type' => 'application/json',
+       'Authorization' => "Bearer #{PUB_GATEWAY_KEY}"
+     }
 
+     body = {
+       acceptance_token: "#{acceptance_token}",
+       amount_in_cents: cost*100,
+       currency: "COP",
+       customer_email: "#{email}",
+       reference: "#{cost*100}-#{email}",
+       payment_method: {
+         type: "CARD",
+         token: "#{payment_token}",
+         installments: 2
+       }
+     }
+
+    response =  HTTParty.post(url, body: body.to_json, headers: headers)
     if response.success?
       return JSON.parse(response.body)
     else
@@ -67,6 +87,4 @@ module PaymentHelper
       error!('Not allowed, Payment source already exists for rider', 403)
     end
   end
-  
-
 end

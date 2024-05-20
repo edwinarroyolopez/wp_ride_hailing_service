@@ -16,7 +16,7 @@
 │   │   ├── helpers/
 │   │   │   ├── authentication_helper.rb
 │   │   │   ├── payment_helper.rb
-│   │   │   └── ride_helper.rb
+│   │   │   └── trip_helper.rb
 │   │   ├── resources/
 │   │   │   ├── payments.rb
 │   │   │   ├── trips.rb
