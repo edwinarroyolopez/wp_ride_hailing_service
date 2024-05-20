@@ -1,11 +1,6 @@
 module Resources
     class Users < Grape::API
       resource :users do
-        desc 'Get all users'
-        get do
-          USERS
-        end
-  
         desc 'Login and get a token'
         params do
           requires :email, type: String, desc: 'Email of the user'
