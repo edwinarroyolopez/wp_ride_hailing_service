@@ -122,6 +122,32 @@ RSpec.describe 'Trips API' do
       expect(JSON.parse(last_response.body)).to include("token"=>ENV['TOKEN_CARD'], "status" => "Payment source created successfully")
     end
 
+    context 'when the driver is not the same' do
+      it 'returns a 403 error' do
+        different_driver = { user_id: 3, user_type: 'driver', email: 'different_driver@example.com' }
+        allow_any_instance_of(Resources::Trips).to receive(:current_user).and_return(different_driver)
+        post '/finish_ride', { latitude: 20.0, longitude: 20.0, ride_id: ride.id, 'Authorization' => "Bearer #{driver_token}"  }
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to include('Not allowed, you are not the driver of this ride')
+      end
+    end
+
+    context 'when the ride is not found' do
+      it 'returns a 404 error' do
+        post '/finish_ride', { latitude: 20.0, longitude: 20.0, ride_id: 999, 'Authorization' => "Bearer #{driver_token}"  }
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    context 'when the ride is already finished' do
+      it 'returns a 403 error' do
+        ride.update(status: 'finished')
+        post '/finish_ride', { latitude: 20.0, longitude: 20.0, ride_id: ride.id, 'Authorization' => "Bearer #{driver_token}" }
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to include('Not allowed, the ride was finished before')
+      end
+    end
+
     context 'when the user is not a rider' do
       it 'returns an error' do
         post '/create_payment_source', {'Authorization' => "Bearer #{driver_token}" }

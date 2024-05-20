@@ -13,7 +13,6 @@ module Resources
     logger = Logger.new(STDOUT)
     BASE_URL = Constants::EXTERNAL_API_URL
 
-
     resource :request_ride do
       desc 'Request a new ride'
       params do

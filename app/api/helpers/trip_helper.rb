@@ -95,8 +95,4 @@ module RideHelper
     return paymentToken
   end
 
-  def finish_ride(params,user)
-    
-  end
-
 end
