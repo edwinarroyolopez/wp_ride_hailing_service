@@ -58,6 +58,7 @@ To install run this command ```bundle install```
 ## Start 
 1. Replace file config/env-example.rb by config/env.rb and  set your environments vars
 2. To start  this command ```rackup -p 3000```
+3. In the folder ```docs/``` there are a file the name ```Ride hailing service.postman_collection.json``` you can use this file to postman import and you can see all endpoints available
 
 # Migrations
 To run migrations this command ```sequel -m db/migrations postgres://DB_USER:DB_PASSWORD@DB_HOST/DB_NAME```

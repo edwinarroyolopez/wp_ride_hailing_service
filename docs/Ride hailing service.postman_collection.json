@@ -1,0 +1,156 @@
+{
+	"info": {
+		"_postman_id": "19d35164-d34a-48e4-81b0-ae67c87415f1",
+		"name": "Ride hailing service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14881393",
+		"_collection_link": "https://martian-water-675846.postman.co/workspace/Ekogui-Housemedia~06dfc842-8ff2-4859-9b14-5eb1a194b127/collection/14881393-19d35164-d34a-48e4-81b0-ae67c87415f1?action=share&source=collection_link&creator=14881393"
+	},
+	"item": [
+		{
+			"name": "loginUser",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/users/login?email=alice@example.com&pass=password1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"users",
+						"login"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "alice@example.com"
+						},
+						{
+							"key": "pass",
+							"value": "password1"
+						}
+					]
+				},
+				"description": "Login - generation user token\n\nRiders  \n1\\. email: 'alice@example.com'  \npass: 'password1'  \n2\\. email: 'bob@example.com'  \npass: 'password2'  \n3\\. email: 'charlie@example.com'  \npass: 'password3'  \n  \nDrivers  \n1\\. email: 'dave@example.com'  \npass: 'password4'  \n2\\. email: 'eve@example.com'  \npass: 'password5'  \n3\\. email: 'frank@example.com'  \npass: 'password6'"
+			},
+			"response": []
+		},
+		{
+			"name": "createUserPayment",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyfQ.tEtHS_IsfUgI6vNFeEU59ZCiCx9_HnrjowVZ3obJG8g",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/create_payment_source",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"create_payment_source"
+					]
+				},
+				"description": "**User profile:** Riders  \nGenerate the payment source to rider users, this is necessary to the rider user can create a new ride\n\n**Note:** the token used here is the token generated in the loginUser"
+			},
+			"response": []
+		},
+		{
+			"name": "requestRide",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyfQ.tEtHS_IsfUgI6vNFeEU59ZCiCx9_HnrjowVZ3obJG8g",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/request_ride?latitude=40.7128&longitude=-74.0060",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"request_ride"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "40.7128"
+						},
+						{
+							"key": "longitude",
+							"value": "-74.0060"
+						}
+					]
+				},
+				"description": "**User profile:** Riders  \n  \nThis allow that a rider user can create a new ride\n\n**Note:** the token used here is the token generated in the loginUser"
+			},
+			"response": []
+		},
+		{
+			"name": "finishRide",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1fQ.w7oacGnGYz3Vta4oUVcsU6WOQ9gXGIpl9m6HZbKTwU4",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/finish_ride?latitude=34.0522&longitude=-118.2437&ride_id=121",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"finish_ride"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "34.0522"
+						},
+						{
+							"key": "longitude",
+							"value": "-118.2437"
+						},
+						{
+							"key": "ride_id",
+							"value": "121"
+						}
+					]
+				},
+				"description": "**User profile:** Drivers\n\nThis allow that a driver user can finish a ride\n\n**Note:** the token used here is the token generated in the loginUser"
+			},
+			"response": []
+		}
+	]
+}
