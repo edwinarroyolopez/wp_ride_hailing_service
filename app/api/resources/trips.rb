@@ -7,11 +7,13 @@ require_relative '../../validators/ride_schema'
 require_relative '../../models/payment_source'
 require_relative '../../models/transaction'
 
+
 module Resources
   class Trips < Grape::API
     format :json
     logger = Logger.new(STDOUT)
-    BASE_URL = ENV['EXTERNAL_API_URL']
+    BASE_URL = Constants::EXTERNAL_API_URL
+
 
     resource :request_ride do
       desc 'Request a new ride'
